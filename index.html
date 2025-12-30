@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCENSOR 13 | ESTACIÓN CENTRAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;700&family=Courier+Prime&family=Inter:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #050505;
+            --red: #ff003c;
+            --gold: #d4af37;
+            --tube-light: rgba(220, 255, 250, 0.8);
+            --metal-base: #1a1a1a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            color: #fff;
+            display: flex; justify-content: center; align-items: center;
+            perspective: 1000px;
+            background: radial-gradient(circle at center, #222, #000);
+        }
+
+        /* --- TEXTURA DE METAL REALISTA (REUTILIZABLE) --- */
+        .metal-grunge {
+            background-color: var(--metal-base);
+            /* Mezcla de gradientes y textura de ruido */
+            background-image: 
+                linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 20%, transparent 80%, rgba(0,0,0,0.8)),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.3) 3px, transparent 4px),
+                url('https://www.transparenttextures.com/patterns/brushed-alum-dark.png');
+            background-blend-mode: multiply, normal, normal;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            border: 1px solid #333;
+        }
+
+        /* --- PANTALLA INICIO --- */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.8s ease-out;
+        }
+        .start-btn {
+            background: transparent; color: var(--red); border: 3px solid var(--red);
+            padding: 15px 40px; font-family: 'Anton'; font-size: 1.5rem; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 3px; transition: 0.3s;
+            box-shadow: 0 0 30px rgba(255,0,60,0.2);
+        }
+        .start-btn:hover { background: var(--red); color: #000; box-shadow: 0 0 60px var(--red); }
+
+        /* --- ESCENARIO 3D --- */
+        #stage {
+            position: relative; width: 100%; height: 100%; max-width: 1400px;
+            transform-style: preserve-3d;
+        }
+
+        /* TECHO Y LUZ */
+        .ceiling {
+            position: absolute; top: -20%; left: 10%; width: 80%; height: 40%;
+            transform: rotateX(70deg); z-index: 10;
+            display: flex; justify-content: center;
+            background: #111; border-bottom: 5px solid #000;
+        }
+        .tube-light {
+            width: 70%; height: 20px; background: #fff; margin-top: 80px;
+            box-shadow: 0 0 100px var(--tube-light);
+            animation: flicker 4s infinite;
+        }
+
+        /* PAREDES LATERALES (Soportes) */
+        .side-structure {
+            position: absolute; top: 0; bottom: 0; width: 20%;
+            z-index: 5; /* Detrás de los paneles UI */
+        }
+        .struct-left { left: 0; transform: skewY(10deg); border-right: 2px solid #000; }
+        .struct-right { right: 0; transform: skewY(-10deg); border-left: 2px solid #000; }
+
+        /* --- PANELES UI FÍSICOS (SOBRESALEN) --- */
+        /* Usamos translateZ para traerlos al frente y que las puertas pasen por detrás */
+        
+        .ui-panel-container {
+            position: absolute; top: 15%; bottom: 15%; width: 180px;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; /* Siempre encima */
+        }
+
+        /* Panel Izquierdo (Interfono) */
+        .panel-left-pos {
+            left: 5%; 
+            transform: rotateY(25deg) translateZ(40px); /* 3D POP */
+        }
+        .intercom-box {
+            width: 100%; padding: 30px 15px; border-radius: 4px;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 20px 20px 60px #000;
+        }
+        .grill { 
+            width: 100%; height: 70px; background: repeating-linear-gradient(0deg, #000, #000 3px, #222 4px); 
+            border: 2px solid #444; margin-bottom: 15px; box-shadow: inset 0 0 10px #000;
+        }
+        .led { width: 15px; height: 15px; background: #311; border-radius: 50%; border: 1px solid #000; transition: 0.1s; }
+        .led.active { background: var(--red); box-shadow: 0 0 20px var(--red); }
+
+        /* Panel Derecho (Botones) */
+        .panel-right-pos {
+            right: 5%;
+            transform: rotateY(-25deg) translateZ(40px); /* 3D POP */
+        }
+        .buttons-box {
+            width: 100%; padding: 30px 10px; border-radius: 4px;
+            display: flex; flex-direction: column; gap: 15px; align-items: center;
+            box-shadow: -20px 20px 60px #000;
+        }
+        
+        .floor-btn {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: radial-gradient(#333, #0a0a0a); border: 2px solid #444; color: #666;
+            font-family: 'Rajdhani'; font-weight: 700; font-size: 1.3rem;
+            display: grid; place-items: center; cursor: pointer; transition: 0.2s; position: relative;
+            box-shadow: 0 5px 10px #000;
+        }
+        .floor-btn:hover { border-color: #fff; color: #fff; background: #444; }
+        .floor-btn.active {
+            background: radial-gradient(var(--red), #400); color: #000;
+            box-shadow: 0 0 30px var(--red); border-color: #f00;
+        }
+        .floor-btn::after { /* Tooltip */
+            content: attr(data-label); position: absolute; right: 75px; 
+            background: rgba(0,0,0,0.9); padding: 5px; color: #fff; font-size: 0.7rem;
+            opacity: 0; pointer-events: none; transition: 0.3s; border-right: 2px solid var(--red); white-space: nowrap;
+        }
+        .floor-btn:hover::after { opacity: 1; right: 70px; }
+
+        /* ESPEJO CENTRAL */
+        .mirror-container {
+            position: absolute; top: 5%; left: 25%; width: 50%; height: 90%;
+            transform: translateZ(-200px); /* Profundidad */
+            background: #000; border: 20px solid #1a1a1a; overflow: hidden;
+            box-shadow: 0 0 150px #000;
+        }
+        video#webcam {
+            width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);
+            filter: grayscale(85%) contrast(1.4) brightness(0.5) sepia(20%); opacity: 0.9;
+        }
+        .reflection-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 40%;
+            background: linear-gradient(to bottom, var(--tube-light) 0%, transparent 80%);
+            opacity: 0.15; pointer-events: none; mix-blend-mode: screen;
+        }
+
+        /* PUERTAS (Detrás de los paneles UI, delante del espejo) */
+        .door {
+            position: absolute; top: 0; width: 50%; height: 100%;
+            z-index: 20; /* Importante: Menor que los paneles (100) */
+            transition: transform 3s cubic-bezier(0.7, 0, 0.3, 1);
+            box-shadow: 5px 0 50px #000;
+            border-bottom: 20px solid rgba(60, 20, 0, 0.6); /* Óxido */
+        }
+        .door-l { left: 0; border-right: 8px solid #000; }
+        .door-r { right: 0; border-left: 8px solid #000; }
+        
+        body.closed .door-l { transform: translateX(0); }
+        body.closed .door-r { transform: translateX(0); }
+        body.open .door-l { transform: translateX(-90%); }
+        body.open .door-r { transform: translateX(90%); }
+
+        /* Display Superior */
+        .floor-display {
+            position: absolute; top: 5%; left: 50%; transform: translateX(-50%);
+            background: #000; padding: 5px 40px; border: 4px solid #222; z-index: 50;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        #display-num { font-family: 'Anton'; font-size: 4rem; color: var(--red); text-shadow: 0 0 15px var(--red); }
+
+        /* --- CONTENIDO WEB --- */
+        .content-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 40; pointer-events: none;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .info-card {
+            width: 80%; max-width: 900px;
+            background: rgba(15, 15, 17, 0.97); /* Metal oscuro */
+            border: 1px solid #444; border-left: 6px solid var(--gold);
+            padding: 40px; color: #ccc; opacity: 0; transform: translateY(40px);
+            transition: 0.6s; pointer-events: auto; backdrop-filter: blur(10px);
+            box-shadow: 0 30px 100px #000;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .info-card.visible { opacity: 1; transform: translateY(0); }
+        
+        .card-header { border-bottom: 1px solid #333; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: baseline;}
+        .card-title { font-family: 'Anton'; font-size: 3rem; color: #fff; text-transform: uppercase; line-height: 1; }
+        .card-body { font-family: 'Courier Prime'; line-height: 1.6; font-size: 1.1rem; }
+        
+        .cta-btn {
+            align-self: flex-start; padding: 12px 30px; border: 2px solid #fff; color: #fff;
+            text-decoration: none; font-weight: bold; text-transform: uppercase; margin-top: 10px; transition: 0.3s;
+        }
+        .cta-btn:hover { background: var(--red); border-color: var(--red); color: #000; }
+
+        @keyframes flicker { 0%,100%{opacity:1} 94%{opacity:1} 95%{opacity:0.4} 96%{opacity:1} 97%{opacity:0.7} 98%{opacity:1} }
+
+    </style>
+</head>
+<body class="closed">
+
+    <div id="intro-overlay">
+        <h1 style="font-family:'Anton'; font-size:5rem; color:#fff; text-shadow:0 0 20px var(--red);">ASCENSOR 13</h1>
+        <p style="color:#777; font-family:'Courier Prime'; letter-spacing:2px; margin-bottom:20px;">ESTACIÓN CENTRAL - NIVEL INFERIOR</p>
+        <button class="start-btn" onclick="initSite()">INICIAR SISTEMA</button>
+    </div>
+
+    <div id="stage">
+        <div class="ceiling metal-grunge"><div class="tube-light"></div></div>
+        
+        <div class="side-structure struct-left metal-grunge"></div>
+        <div class="side-structure struct-right metal-grunge"></div>
+
+        <div class="ui-panel-container panel-left-pos">
+            <div class="intercom-box metal-grunge">
+                <div class="grill"></div>
+                <div class="led" id="intercom-led"></div>
+                <small style="color:#555; margin-top:5px; font-family:'Rajdhani'; font-weight:bold;">VOC-SYS</small>
+            </div>
+        </div>
+
+        <div class="ui-panel-container panel-right-pos">
+            <div class="buttons-box metal-grunge">
+                <div class="floor-btn" id="btn--1" data-label="Redes / Creador" onclick="travel(-1)">-1</div>
+                <div class="floor-btn" id="btn-0" data-label="Inicio / Trailer" onclick="travel(0)">G</div>
+                <div class="floor-btn" id="btn-1" data-label="Historia / Lore" onclick="travel(1)">1</div>
+                <div class="floor-btn" id="btn-5" data-label="Personajes" onclick="travel(5)">5</div>
+                <div class="floor-btn" id="btn-7" data-label="Bocetos / Arte" onclick="travel(7)">7</div>
+                <div class="floor-btn" id="btn-13" data-label="Salida / Wishlist" onclick="travel(13)" style="color:var(--red); border-color:var(--red);">13</div>
+            </div>
+        </div>
+
+        <div class="mirror-container">
+            <div class="reflection-layer"></div>
+            <video id="webcam" autoplay playsinline muted></video>
+        </div>
+
+        <div class="door door-l metal-grunge"></div>
+        <div class="door door-r metal-grunge"></div>
+
+        <div class="floor-display"><div id="display-num">--</div></div>
+    </div>
+
+    <div class="content-layer">
+        <div class="info-card" id="main-card">
+            <div class="card-header">
+                <div class="card-title" id="c-title"></div>
+                <div style="font-family:'Courier Prime'; color:var(--red);">NIVEL <span id="c-floor"></span></div>
+            </div>
+            <div class="card-body" id="c-body"></div>
+            <a href="#" class="cta-btn" id="c-btn">ACCIÓN</a>
+        </div>
+    </div>
+
+    <script>
+        const content = {
+            '-1': { 
+                title: "CONEXIÓN EXTERNA", floor: "B1", btn: "SEGUIR AL CREADOR", voice: "Sótano.",
+                body: "<p>Canales de comunicación abiertos. Sigue el desarrollo en tiempo real.</p><ul><li>Twitter / X</li><li>Discord Oficial</li><li>Itch.io Devlog</li></ul>"
+            },
+            '0': { 
+                title: "LA ESTACIÓN", floor: "00", btn: "VER TRÁILER", voice: "Inicio. Bienvenido.",
+                body: "<p>El ascensor 'Fuera de Servicio' te espera abierto. Una novela visual de horror psicológico donde tus decisiones y tu propio reflejo determinan tu destino.</p>"
+            },
+            '1': { 
+                title: "EL INCIDENTE", floor: "01", btn: "LEER INFORME", voice: "Piso 1. Recuerdos.",
+                body: "<p>Todo empezó en el último tren. María desapareció aquí. El sistema tiene registros de lo que hiciste, aunque tú no lo recuerdes.</p>"
+            },
+            '5': { 
+                title: "ENTIDADES", floor: "05", btn: "VER FICHAS", voice: "Piso 5. No estás solo.",
+                body: "<p>No viajas solo en la cabina.</p><p><strong style='color:var(--red)'>MUERTE:</strong> Te obliga a vivir la verdad.<br><strong style='color:var(--gold)'>DUDA:</strong> Se alimenta de tu miedo.<br><strong>TIEMPO:</strong> Corre sin esperarte.</p>"
+            },
+            '7': { 
+                title: "ARCHIVO VISUAL", floor: "07", btn: "ABRIR GALERÍA", voice: "Piso 7. Archivos.",
+                body: "<p>Bocetos conceptuales, arte del entorno y capturas del sistema de seguridad corrupto. El estilo visual mezcla glitch art y fotografía analógica.</p>"
+            },
+            '13': { 
+                title: "LA SALIDA", floor: "13", btn: "WISHLIST EN STEAM", voice: "Piso 13. Decide.",
+                body: "<p>Has llegado al final del trayecto. La única forma de salir del bucle es comprar el billete de vuelta.</p><p><strong>Añade el juego a tu lista de deseados.</strong></p>"
+            }
+        };
+
+        let audioCtx; let isMoving = false; let currentFloor = null;
+
+        async function initSite() {
+            const AC = window.AudioContext || window.webkitAudioContext; audioCtx = new AC();
+            try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); document.getElementById('webcam').srcObject = stream; } catch(e) {}
+            document.getElementById('intro-overlay').style.opacity = 0;
+            setTimeout(() => document.getElementById('intro-overlay').remove(), 800);
+            playAmbient(); travel(0);
+        }
+
+        function travel(floor) {
+            if(isMoving || floor === currentFloor) return; isMoving = true;
+            
+            document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${floor}`).classList.add('active');
+            document.getElementById('main-card').classList.remove('visible');
+            
+            playSfx('click');
+            document.body.className = "closed";
+
+            setTimeout(() => {
+                const motor = playSfx('motor');
+                document.getElementById('display-num').innerText = "MOV";
+                
+                setTimeout(() => {
+                    motor.stop(); playSfx('ding');
+                    currentFloor = floor;
+                    const data = content[floor];
+                    document.getElementById('display-num').innerText = data.floor;
+                    document.body.className = "open";
+                    
+                    setTimeout(() => {
+                        document.getElementById('c-title').innerText = data.title;
+                        document.getElementById('c-floor').innerText = data.floor;
+                        document.getElementById('c-body').innerHTML = data.body;
+                        document.getElementById('c-btn').innerText = data.btn;
+                        document.getElementById('main-card').classList.add('visible');
+                        speak(data.voice);
+                        isMoving = false;
+                    }, 1000);
+                }, 2500);
+            }, 1000);
+        }
+
+        function playAmbient() {
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type='sawtooth'; osc.frequency.value=50; gain.gain.value=0.03;
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.start();
+        }
+        function playSfx(type) {
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination); const now=audioCtx.currentTime;
+            if(type==='click'){ osc.frequency.setValueAtTime(1000,now); gain.gain.setValueAtTime(0.2,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.1); osc.start(); osc.stop(now+0.1); }
+            if(type==='ding'){ osc.type='triangle'; osc.frequency.setValueAtTime(600,now); gain.gain.setValueAtTime(0.3,now); gain.gain.exponentialRampToValueAtTime(0.001,now+2); osc.start(); osc.stop(now+2); }
+            if(type==='motor'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(40,now); gain.gain.setValueAtTime(0.08,now); osc.start(); return {stop:()=>{gain.gain.linearRampToValueAtTime(0,now+1);osc.stop(now+1);}}}
+        }
+        function speak(text) { 
+            window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='es-ES'; u.rate=0.9; u.pitch=0.6; 
+            const led = document.getElementById('intercom-led'); led.classList.add('active');
+            u.onend = () => led.classList.remove('active');
+            window.speechSynthesis.speak(u); 
+        }
+    </script>
+</body>
+</html>
