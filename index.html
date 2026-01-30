@@ -12,9 +12,9 @@
             --rust-dark: #2a1a15;
             --rust-light: #5a3a30;
             --metal: #252525;
-            --bulb-on: #ff4500; /* Naranja incandescente */
-            --bulb-off: #552222;
-            --warm-light: rgba(255, 245, 220, 0.7); /* Luz fluorescente vieja */
+            --bulb-on: #ff4500;
+            --warm-light: rgba(255, 245, 220, 0.4);
+            --paper: #d8c8b8;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
@@ -23,13 +23,11 @@
             background: var(--bg);
             height: 100vh; overflow: hidden; color: #ccc;
             display: flex; justify-content: center; align-items: center;
-            perspective: 1000px; font-family: 'Courier Prime', monospace;
+            perspective: 1200px; font-family: 'Courier Prime', monospace;
         }
 
-        /* --- TEXTURA METAL REALISTA SUCIO --- */
         .realistic-metal {
             background-color: var(--metal);
-            /* Capas: Patrón cepillado + Ruido de suciedad + Viñeta oscura */
             background-image: 
                 url('https://www.transparenttextures.com/patterns/brushed-alum-dark.png'),
                 url('https://www.transparenttextures.com/patterns/dark-matter.png'),
@@ -50,169 +48,102 @@
             background: transparent; color: #aaa; border: 4px solid #555;
             padding: 20px 50px; font-family: 'Anton'; font-size: 2rem; cursor: pointer;
             text-transform: uppercase; letter-spacing: 4px; transition: 0.3s;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
         .start-btn:hover { border-color: var(--rust-light); color: #fff; box-shadow: 0 0 30px var(--rust-dark); }
 
-        /* --- ESCENARIO 3D --- */
-        #stage {
-            position: relative; width: 100%; height: 100%; max-width: 1400px;
-            transform-style: preserve-3d;
-        }
+        /* --- ESCENARIO --- */
+        #stage { position: relative; width: 100%; height: 100%; max-width: 1400px; transform-style: preserve-3d; }
 
-        /* TECHO Y LUZ FLUORESCENTE VIEJA */
         .ceiling {
-            position: absolute; top: -20%; left: 10%; width: 80%; height: 40%;
-            transform: rotateX(70deg); z-index: 10;
+            position: absolute; top: -15%; left: 10%; width: 80%; height: 35%;
+            transform: rotateX(75deg); z-index: 5;
             display: flex; justify-content: center;
-            background: #1a1a1a; border-bottom: 10px solid #000;
+            background: #1a1a1a; border-bottom: 8px solid #000;
         }
         .fluorescent-tube {
-            width: 70%; height: 30px; background: #fffce0; margin-top: 80px;
-            box-shadow: 0 0 120px var(--warm-light); border-radius: 4px;
-            animation: badFluorescent 5s infinite; /* Parpadeo irregular */
+            width: 60%; height: 15px; background: #fffce0; margin-top: 60px;
+            box-shadow: 0 0 60px var(--warm-light); border-radius: 4px;
+            animation: badFluorescent 5s infinite;
         }
 
-        /* --- PANELES FÍSICOS PESADOS --- */
+        /* --- PANELES --- */
         .control-panel-box {
             position: absolute; top: 50%; transform: translateY(-50%);
-            z-index: 100; /* Siempre visibles */
-            padding: 30px 20px; border-radius: 4px;
-            border: 4px solid #111;
-            box-shadow: 15px 15px 50px #000, inset 2px 2px 10px rgba(255,255,255,0.1);
+            z-index: 500;
+            padding: 20px 15px; border-radius: 4px; border: 4px solid #111;
+            pointer-events: auto;
         }
-
-        /* INTERFONO ANALÓGICO (Izquierda) */
-        .panel-left { left: 5%; transform: translateY(-50%) rotateY(20deg) translateZ(30px); width: 150px; }
-        .grill-heavy {
-            width: 100%; height: 70px; background: repeating-linear-gradient(0deg, #111, #111 4px, #333 5px);
-            border: 3px solid #000; margin-bottom: 15px; box-shadow: inset 0 0 15px #000;
-        }
-        .analog-led {
-            width: 20px; height: 20px; background: #300; border-radius: 50%;
-            border: 3px solid #000; box-shadow: inset 2px 2px 5px rgba(255,255,255,0.2);
-            transition: 0.1s;
-        }
-        .analog-led.active { background: #f00; box-shadow: 0 0 20px #f00; }
-
-        /* BOTONERA FÍSICA (Derecha) */
-        .panel-right { right: 5%; transform: translateY(-50%) rotateY(-20deg) translateZ(30px); width: 160px; }
-        .buttons-grid { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        .panel-left { left: 4%; transform: translateY(-50%) rotateY(25deg) translateZ(100px); width: 140px; }
+        .panel-right { right: 4%; transform: translateY(-50%) rotateY(-25deg) translateZ(100px); width: 150px; }
         
+        .grill-heavy { width: 100%; height: 50px; background: repeating-linear-gradient(0deg, #111, #111 4px, #333 5px); border: 2px solid #000; margin-bottom: 10px; }
+        .analog-led { width: 12px; height: 12px; background: #300; border-radius: 50%; margin: 0 auto; border: 2px solid #000; }
+        .analog-led.active { background: #f00; box-shadow: 0 0 15px #f00; }
+
+        .buttons-grid { display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .phys-btn {
-            width: 65px; height: 65px; border-radius: 50%;
-            /* Borde metálico + centro de plástico viejo */
-            background: radial-gradient(circle at 30% 30%, #555, #222);
-            border: 5px solid #444; color: #888;
-            font-family: 'Anton'; font-size: 1.6rem; letter-spacing: 1px;
-            display: grid; place-items: center; cursor: pointer; transition: 0.2s;
-            box-shadow: 0 5px 15px #000, inset 0 2px 5px rgba(255,255,255,0.1);
+            width: 42px; height: 42px; border-radius: 50%; background: #2a2a2a;
+            border: 3px solid #3a3a3a; color: #666; font-family: 'Anton'; font-size: 1.1rem;
+            display: grid; place-items: center; cursor: pointer; transition: all 0.1s;
         }
-        .phys-btn:active { transform: scale(0.96); box-shadow: 0 2px 5px #000; }
-        
-        .phys-btn.active {
-            /* Luz incandescente encendida */
-            background: radial-gradient(circle at 30% 30%, #ff8c00, #8b0000);
-            color: #200; border-color: #666;
-            box-shadow: 0 0 25px var(--bulb-on); text-shadow: 0 0 10px #ff8c00;
-        }
+        .phys-btn:hover { border-color: #555; color: #999; }
+        .phys-btn.active { background: #8b0000; color: #fff; box-shadow: 0 0 15px var(--bulb-on); border-color: #ff4500; }
 
-        /* ESPEJO SUCIO */
+        /* --- ESPEJO Y PUERTAS --- */
         .mirror-frame {
             position: absolute; top: 5%; left: 22%; width: 56%; height: 90%;
-            transform: translateZ(-250px);
-            background: #000; border: 25px solid #1a1a1a; overflow: hidden;
-            box-shadow: inset 0 0 150px #000; z-index: 1;
+            transform: translateZ(-200px); background: #000; border: 20px solid #1a1a1a; overflow: hidden;
+            z-index: 1;
         }
-        video#webcam {
-            width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);
-            filter: grayscale(100%) contrast(1.5) brightness(0.4) sepia(60%); opacity: 0.9;
-        }
-        .dirt-overlay {
-            position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; opacity: 0.6;
-            background: url('https://www.transparenttextures.com/patterns/dust.png');
-            mix-blend-mode: overlay;
-        }
-        .scratch-overlay {
-            position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; opacity: 0.3;
-            background: url('https://www.transparenttextures.com/patterns/scratches.png');
-        }
-
-        /* PUERTAS PESADAS Y OXIDADA */
-        .door {
-            position: absolute; top: 0; width: 50%; height: 100%;
-            z-index: 20; transition: transform 4s cubic-bezier(0.6, 0, 0.4, 1); /* Lento y pesado */
-            box-shadow: 10px 0 100px #000;
-            border-bottom: 30px solid var(--rust-dark); /* Mucho óxido abajo */
-        }
-        .door::after { /* Textura extra de óxido en el borde inferior */
-            content:''; position:absolute; bottom:0; left:0; width:100%; height:100px;
-            background: linear-gradient(to top, var(--rust-light), transparent); opacity: 0.7;
-        }
-        .door-l { left: 0; border-right: 6px solid #000; }
-        .door-r { right: 0; border-left: 6px solid #000; }
+        video#webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); filter: grayscale(100%) brightness(0.25) contrast(1.2); }
         
-        body.closed .door-l { transform: translateX(0); }
-        body.closed .door-r { transform: translateX(0); }
-        body.open .door-l { transform: translateX(-85%); }
-        body.open .door-r { transform: translateX(85%); }
+        .door { position: absolute; top: 0; width: 50.5%; height: 100%; z-index: 100; transition: transform 3.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .door-l { left: 0; border-right: 5px solid #000; }
+        .door-r { right: 0; border-left: 5px solid #000; }
+        body.open .door-l { transform: translateX(-95%); }
+        body.open .door-r { transform: translateX(95%); }
 
-        /* DISPLAY ANALÓGICO VIEJO */
-        .display-analog {
-            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-            background: #000; padding: 10px 40px; border: 5px solid #333; z-index: 50;
-            box-shadow: 0 10px 30px #000;
-        }
-        #floor-txt { 
-            font-family: 'Anton'; font-size: 3.5rem; color: var(--bulb-on); 
-            text-shadow: 0 0 15px var(--bulb-on); letter-spacing: 5px; opacity: 0.9;
-        }
+        .display-analog { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: #000; padding: 5px 30px; border: 4px solid #333; z-index: 200; }
+        #floor-txt { font-family: 'Anton'; font-size: 2.2rem; color: var(--bulb-on); text-shadow: 0 0 10px var(--bulb-on); }
 
-        /* --- CONTENIDO (Estilo Expediente/Papel Viejo) --- */
-        .content-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 40; pointer-events: none;
-            display: flex; justify-content: center; align-items: center;
-        }
+        /* --- TARJETA DOSSIER --- */
+        .content-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 300; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .dossier-card {
-            width: 600px; max-width: 90%;
-            background: #d8c8b8; /* Color papel viejo */
-            background-image: url('https://www.transparenttextures.com/patterns/paper.png');
-            color: #222; padding: 40px; transform: translateY(50px) rotate(-1deg);
-            opacity: 0; transition: 0.5s; pointer-events: auto;
-            box-shadow: 0 30px 70px #000; border: 1px solid #887766;
+            width: 440px; background: var(--paper); background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+            color: #222; padding: 25px; transform: translateY(30px); opacity: 0; transition: 0.6s; pointer-events: auto;
+            box-shadow: 0 20px 50px #000; border: 1px solid #887766;
         }
-        .dossier-card.visible { opacity: 1; transform: translateY(0) rotate(0deg); }
-        
-        .stamp {
-            border: 3px solid var(--rust-dark); color: var(--rust-dark); font-family: 'Special Elite';
-            font-weight: bold; padding: 5px 10px; display: inline-block; transform: rotate(-3deg);
-            font-size: 1.2rem; margin-bottom: 20px; opacity: 0.8;
-        }
-        
-        .card-title { font-family: 'Anton'; font-size: 3rem; margin-bottom: 15px; line-height: 1; color: #000; }
-        .card-body { font-family: 'Special Elite'; font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px; }
-        
-        .action-link {
-            display: inline-block; padding: 12px 25px; background: #222; color: #ddd;
-            text-decoration: none; font-family: 'Rajdhani'; font-weight: 700; text-transform: uppercase;
-            transition: 0.2s; border: 2px solid #222;
-        }
-        .action-link:hover { background: var(--rust-light); color: #fff; border-color: var(--rust-dark); }
+        .dossier-card.visible { opacity: 1; transform: translateY(0); }
+        .stamp { border: 2px solid var(--rust-dark); color: var(--rust-dark); font-family: 'Special Elite'; font-weight: bold; padding: 4px 8px; display: inline-block; transform: rotate(-2deg); margin-bottom: 12px; font-size: 0.75rem; }
+        .action-link { display: inline-block; padding: 10px 20px; background: #222; color: #ddd; font-family: 'Rajdhani'; font-weight: 700; cursor: pointer; border: none; width: 100%; text-align: center; text-transform: uppercase; margin-top: 10px; }
 
-        /* Animaciones */
-        @keyframes badFluorescent {
-            0%, 100% { opacity: 1; } 85% { opacity: 1; } 86% { opacity: 0.4; } 87% { opacity: 1; }
-            92% { opacity: 1; } 93% { opacity: 0.2; } 94% { opacity: 0.6; } 95% { opacity: 1; }
+        /* --- MODAL --- */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); z-index: 10000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
         }
+        .modal-content {
+            width: 650px; max-width: 90%; max-height: 80vh; background: var(--paper);
+            padding: 40px; position: relative; overflow-y: auto;
+            box-shadow: 0 0 100px #000; font-family: 'Special Elite'; color: #111; line-height: 1.4;
+        }
+        .close-modal { position: absolute; top: 10px; right: 20px; font-size: 2.5rem; cursor: pointer; color: #000; }
+        .sketch-img { width: 100%; margin: 15px 0; border: 1px solid #000; filter: sepia(0.5) contrast(1.1); }
+        
+        /* Estilo para links sociales en el modal */
+        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .social-box { border: 1px dashed #333; padding: 10px; text-align: center; background: rgba(0,0,0,0.05); }
 
+        @keyframes badFluorescent { 0%, 100% { opacity: 1; } 86% { opacity: 0.3; } 93% { opacity: 0.1; } }
     </style>
 </head>
 <body class="closed">
 
     <div id="intro-overlay">
-        <h1 style="font-family:'Anton'; font-size:5rem; color:#aaa; text-shadow:0 0 20px #000;">ASCENSOR 13</h1>
-        <p style="color:#666; font-family:'Special Elite'; letter-spacing:2px; margin-bottom:30px;">ESTACIÓN CENTRAL // VÍA MUERTA</p>
+        <h1 style="font-family:'Anton'; font-size:4rem; color:#aaa; margin-bottom: 5px;">ASCENSOR 13</h1>
+        <p style="font-family:'Special Elite'; color: #444; margin-bottom: 30px;">PROYECTO INDIE // ESTACIÓN CENTRAL</p>
         <button class="start-btn" onclick="initSite()">LLAMAR</button>
     </div>
 
@@ -222,83 +153,140 @@
         <div class="control-panel-box panel-left realistic-metal">
             <div class="grill-heavy"></div>
             <div class="analog-led" id="voice-led"></div>
-            <div style="font-family:'Rajdhani'; color:#555; margin-top:10px; font-weight:bold;">INTERCOM</div>
+            <p style="font-family:'Rajdhani'; font-size: 0.6rem; text-align: center; color: #555; margin-top: 8px; font-weight: bold;">INTERCOM</p>
         </div>
 
         <div class="control-panel-box panel-right realistic-metal">
             <div class="buttons-grid">
                 <div class="phys-btn" id="btn-0" onclick="travel(0)">G</div>
                 <div class="phys-btn" id="btn-1" onclick="travel(1)">1</div>
+                <div class="phys-btn" id="btn-2" onclick="travel(2)">2</div>
+                <div class="phys-btn" id="btn-3" onclick="travel(3)">3</div>
                 <div class="phys-btn" id="btn-5" onclick="travel(5)">5</div>
                 <div class="phys-btn" id="btn-7" onclick="travel(7)">7</div>
-                <div class="phys-btn" id="btn-13" onclick="travel(13)" style="color:#a55; border-color:#633;">13</div>
+                <div class="phys-btn" id="btn-9" onclick="travel(9)">9</div>
+                <div class="phys-btn" id="btn-10" onclick="travel(10)" style="color:#6a6; border-color: #242;">INFO</div>
+                <div class="phys-btn" id="btn-13" onclick="travel(13)" style="color:#f66; border-color: #522;">13</div>
             </div>
         </div>
 
-        <div class="mirror-frame realistic-metal">
-            <div class="dirt-overlay"></div>
-            <div class="scratch-overlay"></div>
+        <div class="mirror-frame">
             <video id="webcam" autoplay playsinline muted></video>
         </div>
 
         <div class="display-analog"><div id="floor-txt">--</div></div>
-
         <div class="door door-l realistic-metal"></div>
         <div class="door door-r realistic-metal"></div>
     </div>
 
     <div class="content-layer">
         <div class="dossier-card" id="main-card">
-            <div class="stamp" id="c-stamp">CONFIDENCIAL</div>
-            <div class="card-title" id="c-title"></div>
-            <div class="card-body" id="c-text"></div>
-            <a href="#" class="action-link" id="c-btn">EXAMINAR</a>
+            <div class="stamp" id="c-stamp">--</div>
+            <div class="card-title" id="c-title" style="font-family:'Anton'; font-size:1.8rem; color:#000; line-height: 1;"></div>
+            <div class="card-body" id="c-text" style="margin: 12px 0 18px 0; font-size: 0.85rem;"></div>
+            <button class="action-link" id="c-btn" onclick="openDetails()">EXAMINAR</button>
+        </div>
+    </div>
+
+    <div id="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal()">×</span>
+            <div id="modal-body"></div>
         </div>
     </div>
 
     <script>
         const content = {
-            '0': { stamp: "ACCESO PÚBLICO", title: "LA ESTACIÓN", text: "El ascensor de la vía muerta. Siempre estropeado, pero hoy las puertas se abren. Una novela visual de horror psicológico donde tu reflejo es el protagonista.", btn: "VER TRÁILER", voice: "Bienvenido a la estación." },
-            '1': { stamp: "EXPEDIENTE #892", title: "EL ORIGEN", text: "Informe de desaparición: Último tren de la noche. María desapareció en este nivel. Hay discrepancias en tu declaración.", btn: "LEER INFORME", voice: "Piso 1. El recuerdo." },
-            '5': { stamp: "PELIGRO COGNITIVO", title: "ENTIDADES", text: "No viajas solo. La Muerte, la Duda y el Tiempo se manifiestan en el espejo. Mantén la calma.", btn: "VER ARCHIVOS", voice: "Piso 5. No mires fijamente." },
-            '7': { stamp: "EVIDENCIA VISUAL", title: "GALERÍA", text: "Fotografías recuperadas de la cámara de seguridad analógica. El metraje está dañado.", btn: "VER FOTOS", voice: "Piso 7. Datos corruptos." },
-            '13': { stamp: "SALIDA DE EMERGENCIA", title: "EL FINAL", text: "La única salida es terminar el trayecto. Enfréntate a la realidad en el juego completo.", btn: "WISHLIST STEAM", voice: "Piso 13. Última parada." }
+            '0': { 
+                stamp: "REGISTRO ENTRADA", title: "LA ESTACIÓN", 
+                text: "Entro en la estación, paso el torno como siempre. Pero hoy, el ascensor de la derecha me espera abierto.", 
+                btn: "LEER INTRODUCCIÓN", voice: "Piso G. Bienvenido a la vía muerta.",
+                details: "<h3>EL ERROR TÉCNICO</h3><p>En los planos, este hueco no existe. Es poco más que un fantasma. Solo aparece cuando no quieres enfrentarte a algo.</p><p><i>Hoy, después de años huyendo de lo que pasó con María, el ascensor está ahí. Esperándome.</i></p>"
+            },
+            '1': { 
+                stamp: "EXPEDIENTE #892", title: "MARÍA: EL RECUERDO", 
+                text: "Nunca superaste ese 'no'. Solo lo guardaste... hasta que pesó más que tú.", 
+                btn: "VER EXPEDIENTE", voice: "Piso 1. El recuerdo. María no está aquí.",
+                details: "<h3>LA HERIDA ANTIGUA</h3><p>La primera vez que dijiste 'te quiero', ella dijo 'lo siento'. Ese día dejaste de intentar. Dejaste de vivir.</p><p><b>Muerte:</b> 'La muerte no es solo el fin. Es el momento en que algo dentro de ti deja de moverse'.</p>"
+            },
+            '2': { 
+                stamp: "INTERCEPCIÓN SENSORIAL", title: "LA DUDA", 
+                text: "Soy esa cosquilla que te dice 'no te abras de nuevo, te destruirán otra vez'.", 
+                btn: "ESCUCHAR DUDA", voice: "Piso 2. Escucha a la Duda. Ella te protege, ¿verdad?",
+                details: "<h3>VOZ DE LA DUDA</h3><p>'Soy la que te mantuvo lejos de Marta. Para protegerte. Porque si no hablas, no te pueden rechazar'.</p>"
+            },
+            '3': { 
+                stamp: "DATOS DEGRADADOS", title: "EL TIEMPO", 
+                text: "Soy el que corre, el que se agota aunque no quieras. El que se llevó a María mientras esperabas.", 
+                btn: "VER RELOJ", voice: "Piso 3. El tiempo se agota, Álex.",
+                details: "<h3>CRONOLOGÍA DEL MIEDO</h3><p>Dijiste 'mañana se lo digo'. Pero el mañana nunca llegó para ella. Ahora estás haciendo lo mismo con Marta.</p>"
+            },
+            '5': { 
+                stamp: "CARGA COGNITIVA", title: "LAS ENTIDADES", 
+                text: "No viajas solo. La Muerte, la Duda y el Tiempo son los únicos pasajeros constantes.", 
+                btn: "VER BOCETOS", voice: "Piso 5. El espejo no miente.",
+                details: "<h3>BOCETOS DE SOMBRAS</h3><img src='https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=1000&auto=format&fit=crop' class='sketch-img'><p><b>Muerte:</b> 'La muerte es la que te obliga a vivir. Y tú llevas demasiado tiempo sobreviviendo'.</p>"
+            },
+            '7': { 
+                stamp: "REFLEJO DISTORSIONADO", title: "EL ESPEJO", 
+                text: "Tu reflejo se mueve segundos antes que tú. Es más sincero de lo que te atreves a ser.", 
+                btn: "MIRAR REFLEJO", voice: "Piso 7. Mírate. Eres un guion sin estrenar.",
+                details: "<h3>DIÁLOGO CON EL ESPEJO</h3><p>REFLEJO: 'Ensayas sonrisas ingeniosas... y luego cuando llega Marta, solo dices hola'.</p>"
+            },
+            '9': { 
+                stamp: "LLAMADA ENTRANTE", title: "MARTA: LA LLAMADA", 
+                text: "El interfono marca un número inexistente. Marta responde. ¿Vas a hablar o vas a colgar?", 
+                btn: "ABRIR INTERCOM", voice: "Piso 9. Ella está al otro lado. Di algo.",
+                details: "<h3>INTERCEPCIÓN TELEFÓNICA</h3><p>Marta: '¿Estás ahí? Siempre te he visto fuerte... pero si estás temblando, puedo esperarte. Solo no me cierres la puerta'.</p>"
+            },
+            '10': { 
+                stamp: "ARCHIVO DE MANTENIMIENTO", title: "DESARROLLO", 
+                text: "Detrás de los muros de la estación central hay un equipo de humanos creando esta pesadilla.", 
+                btn: "VER CRÉDITOS", voice: "Accediendo a los archivos de desarrollo del proyecto.",
+                details: "<h3>ESTACIÓN CENTRAL DE CONTROL</h3><p><b>Ascensor 13</b> es un proyecto indie nacido de la fascinación por los espacios liminales y el horror psicológico.</p><p><b>Equipo:</b> Desarrollado íntegramente por apasionados del género (Álex y equipo técnico).</p><div class='social-grid'><div class='social-box'><b>INSTAGRAM</b><br>@Ascensor13_Dev</div><div class='social-box'><b>TWITTER/X</b><br>@Estacion13_Horror</div><div class='social-box'><b>TIKTOK</b><br>VíaMuerta_Studio</div><div class='social-box'><b>WEB</b><br>www.ascensor13.com</div></div><p style='margin-top:20px; font-size: 0.8rem;'><i>Este juego utiliza tu propia imagen para reflejar tus miedos. Gracias por ser parte del experimento.</i></p>"
+            },
+            '13': { 
+                stamp: "REINICIO TOTAL", title: "LA SALIDA", 
+                text: "Sesenta segundos han pasado. Las puertas se abren. Ella está ahí de verdad. Es hora de ser real.", 
+                btn: "SALIR", voice: "Piso 13. Última parada. Elige vivir ahora.",
+                details: "<h3>RUIDO BLANCO</h3><p>El rojo desaparece. Vuelve la luz blanca. Marta está ahí de verdad.</p><p><b>Conclusión:</b> Imaginamos mucho, hacemos poco. Pero hoy... hoy puedes decir 'Hola'.</p><button class='action-link' onclick='location.reload()' style='margin-top:20px'>SALIR DEL BUCLE</button>"
+            }
         };
 
         let audioCtx; let isMoving = false; let currentFloor = null;
+        let ambientGain;
 
         async function initSite() {
             const AC = window.AudioContext || window.webkitAudioContext; audioCtx = new AC();
-            try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); document.getElementById('webcam').srcObject = stream; } catch(e) {}
+            try { 
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true }); 
+                document.getElementById('webcam').srcObject = stream; 
+            } catch(e) { console.log("Cámara no disponible"); }
             document.getElementById('intro-overlay').style.opacity = 0;
-            setTimeout(() => document.getElementById('intro-overlay').remove(), 800);
+            setTimeout(() => document.getElementById('intro-overlay').remove(), 1000);
             playAmbient(); travel(0);
         }
 
         function travel(floor) {
-            if(isMoving || floor === currentFloor) return; isMoving = true;
-            
+            if(isMoving || floor === currentFloor) return; 
+            isMoving = true;
             document.querySelectorAll('.phys-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${floor}`).classList.add('active');
+            const targetBtn = document.getElementById(`btn-${floor}`);
+            if(targetBtn) targetBtn.classList.add('active');
             document.getElementById('main-card').classList.remove('visible');
-            
-            playSfx('click');
+            playSfx('click', 0.1);
             document.body.className = "closed";
 
             setTimeout(() => {
-                const motor = playSfx('motor');
+                const motor = playSfx('motor', 0.02);
                 document.getElementById('floor-txt').innerText = "MOV";
-                
-                // La luz parpadea más al moverse
-                document.querySelector('.fluorescent-tube').style.animationDuration = "0.5s";
-
+                document.querySelector('.fluorescent-tube').style.animationDuration = "0.3s";
                 setTimeout(() => {
-                    motor.stop(); playSfx('ding');
+                    motor.stop(); playSfx('ding', 0.05);
                     currentFloor = floor;
-                    document.getElementById('floor-txt').innerText = floor === 0 ? "G" : floor;
+                    document.getElementById('floor-txt').innerText = floor === 10 ? "INF" : (floor === 0 ? "G" : floor);
                     document.body.className = "open";
-                    document.querySelector('.fluorescent-tube').style.animationDuration = "5s"; // Luz normal
-                    
+                    document.querySelector('.fluorescent-tube').style.animationDuration = "5s";
                     setTimeout(() => {
                         const data = content[floor];
                         document.getElementById('c-stamp').innerText = data.stamp;
@@ -309,28 +297,42 @@
                         speak(data.voice);
                         isMoving = false;
                     }, 1200);
-                }, 3500); // Viaje lento y pesado
+                }, 3000);
             }, 1000);
         }
 
         function playAmbient() {
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type='sawtooth'; osc.frequency.value=50; gain.gain.value=0.04; // Zumbido eléctrico grave
-            osc.connect(gain); gain.connect(audioCtx.destination); osc.start();
+            const osc = audioCtx.createOscillator(); ambientGain = audioCtx.createGain();
+            osc.type='sine'; osc.frequency.value=50; ambientGain.gain.value=0.01;
+            osc.connect(ambientGain); ambientGain.connect(audioCtx.destination); osc.start();
         }
-        function playSfx(type) {
+
+        function playSfx(type, vol) {
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination); const now=audioCtx.currentTime;
-            if(type==='click'){ osc.frequency.setValueAtTime(500,now); gain.gain.setValueAtTime(0.3,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.15); osc.start(); osc.stop(now+0.15); } // Click pesado
-            if(type==='ding'){ osc.type='triangle'; osc.frequency.setValueAtTime(450,now); gain.gain.setValueAtTime(0.2,now); gain.gain.exponentialRampToValueAtTime(0.001,now+3); osc.start(); osc.stop(now+3); } // Ding viejo
-            if(type==='motor'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(35,now); gain.gain.setValueAtTime(0.1,now); osc.start(); return {stop:()=>{gain.gain.linearRampToValueAtTime(0,now+1.5);osc.stop(now+1.5);}}} // Motor pesado
+            gain.gain.setValueAtTime(vol, now);
+            if(type==='click'){ osc.frequency.setValueAtTime(400,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.1); osc.start(); osc.stop(now+0.1); }
+            if(type==='ding'){ osc.type='triangle'; osc.frequency.setValueAtTime(440,now); gain.gain.exponentialRampToValueAtTime(0.001,now+1.5); osc.start(); osc.stop(now+1.5); }
+            if(type==='motor'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(30,now); osc.start(); return {stop:()=>{gain.gain.linearRampToValueAtTime(0,now+1);osc.stop(now+1);}}}
         }
+
         function speak(text) { 
-            window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='es-ES'; u.rate=0.85; u.pitch=0.4; // Voz grave
+            window.speechSynthesis.cancel(); 
+            const u=new SpeechSynthesisUtterance(text); u.lang='es-ES'; u.rate=0.8; u.pitch=0.2;
             const led = document.getElementById('voice-led'); led.classList.add('active');
             u.onend = () => led.classList.remove('active');
             window.speechSynthesis.speak(u); 
         }
+
+        function openDetails() {
+            const modal = document.getElementById('modal-overlay');
+            const body = document.getElementById('modal-body');
+            body.innerHTML = content[currentFloor].details;
+            modal.style.display = 'flex';
+            playSfx('click', 0.1);
+        }
+
+        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
     </script>
 </body>
 </html>
