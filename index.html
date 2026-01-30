@@ -77,8 +77,9 @@
         .panel-right { right: 4%; transform: translateY(-50%) rotateY(-25deg) translateZ(100px); width: 150px; }
         
         .grill-heavy { width: 100%; height: 50px; background: repeating-linear-gradient(0deg, #111, #111 4px, #333 5px); border: 2px solid #000; margin-bottom: 10px; }
-        .analog-led { width: 12px; height: 12px; background: #300; border-radius: 50%; margin: 0 auto; border: 2px solid #000; }
+        .analog-led { width: 12px; height: 12px; background: #300; border-radius: 50%; margin: 0 auto; border: 2px solid #000; transition: background 0.1s; }
         .analog-led.active { background: #f00; box-shadow: 0 0 15px #f00; }
+        .analog-led.glitch-flash { animation: ledFlicker 0.2s infinite; }
 
         .buttons-grid { display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .phys-btn {
@@ -88,6 +89,9 @@
         }
         .phys-btn:hover { border-color: #555; color: #999; }
         .phys-btn.active { background: #8b0000; color: #fff; box-shadow: 0 0 15px var(--bulb-on); border-color: #ff4500; }
+        
+        /* Efecto de embrujo en botones */
+        .phys-btn.haunted { animation: btnHaunt 0.5s infinite alternate; color: #a00; border-color: #500; }
 
         /* --- ESPEJO REALISTA Y ENTIDADES --- */
         .mirror-frame {
@@ -96,19 +100,15 @@
             z-index: 1; box-shadow: inset 0 0 80px #000;
         }
         
-        /* 1. ESTÁTICA GENERADA POR CSS (SIN IMAGEN EXTERNA PARA EVITAR ERRORES) */
         .no-signal-bg {
             position: absolute; top:0; left:0; width:100%; height:100%;
             background-color: #111;
-            /* Patrón de ruido generado con gradientes */
             background-image: repeating-linear-gradient(transparent 0px, transparent 1px, rgba(255,255,255,0.08) 1px, rgba(255,255,255,0.08) 2px);
             background-size: 100% 4px;
             animation: staticNoise 0.2s infinite linear;
-            z-index: 0;
-            display: none; /* Se activa con JS */
+            z-index: 0; display: none;
         }
 
-        /* 2. Video Webcam */
         video#webcam { 
             width: 100%; height: 100%; object-fit: cover; 
             transform: scaleX(-1); 
@@ -116,22 +116,17 @@
             position: relative; z-index: 1; 
         }
 
-        /* 3. Capa de Suciedad (Grunge) */
         .mirror-grime {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('https://www.transparenttextures.com/patterns/black-felt.png'); 
-            opacity: 0.5; z-index: 5; pointer-events: none;
-            mix-blend-mode: overlay;
+            opacity: 0.5; z-index: 5; pointer-events: none; mix-blend-mode: overlay;
         }
-
-        /* 4. Capa de Reflejo de Luz */
         .mirror-reflection {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.03) 40%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 60%, transparent 65%);
             z-index: 6; pointer-events: none;
         }
 
-        /* 5. Capa de Entidades */
         #shadow-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 2; overflow: hidden;
@@ -145,7 +140,6 @@
             mix-blend-mode: normal; 
         }
 
-        /* Imágenes de Entidades (URLs actualizadas/verificadas) */
         #entity-death { background-image: url('https://cdn.pixabay.com/photo/2013/07/12/12/55/grim-reaper-146552_1280.png'); }
         #entity-doubt { background-image: url('https://cdn.pixabay.com/photo/2016/11/14/03/38/achieve-1822503_1280.png'); filter: blur(3px) brightness(0.5); }
         #entity-marta { background-image: url('https://cdn.pixabay.com/photo/2016/03/31/19/58/avatar-1295429_1280.png'); }
@@ -187,16 +181,14 @@
             box-shadow: 0 0 100px #000; font-family: 'Special Elite'; color: #111; line-height: 1.4;
         }
         .close-modal { position: absolute; top: 10px; right: 20px; font-size: 2.5rem; cursor: pointer; color: #000; }
-        .sketch-img { width: 100%; margin: 15px 0; border: 1px solid #000; filter: sepia(0.5) contrast(1.1); }
         
-        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .social-box { border: 1px dashed #333; padding: 10px; text-align: center; background: rgba(0,0,0,0.05); }
-
         @keyframes badFluorescent { 0%, 100% { opacity: 1; } 86% { opacity: 0.3; } 93% { opacity: 0.1; } }
         @keyframes staticNoise { 0% { background-position: 0 0; } 100% { background-position: 0 60px; } }
+        @keyframes ledFlicker { 0% { background: #300; } 50% { background: #f00; box-shadow: 0 0 20px #f00; } 100% { background: #300; } }
+        @keyframes btnHaunt { 0% { box-shadow: 0 0 0 transparent; } 100% { box-shadow: 0 0 15px red; background: #311; } }
     </style>
 </head>
-<body class="closed">
+<body class="closed" onmousemove="resetIdleTimer()" onclick="resetIdleTimer()">
 
     <div id="intro-overlay">
         <h1 style="font-family:'Anton'; font-size:4rem; color:#aaa; margin-bottom: 5px;">ASCENSOR 13</h1>
@@ -231,9 +223,7 @@
             <div class="mirror-grime"></div>
             <div class="mirror-reflection"></div>
             <div class="no-signal-bg" id="static-bg"></div>
-            
             <video id="webcam" autoplay playsinline muted></video>
-            
             <div id="shadow-layer">
                 <div class="entity" id="entity-death"></div>
                 <div class="entity" id="entity-doubt"></div>
@@ -263,89 +253,97 @@
     </div>
 
     <script>
+        // --- CONFIGURACIÓN DE VOZ Y AMBIENTE SONORO ---
         const voiceConfig = {
-            '0': { pitch: 0.8, rate: 0.9 }, // Normal
-            '1': { pitch: 0.1, rate: 0.6 }, // MUERTE
-            '2': { pitch: 1.8, rate: 1.3 }, // DUDA
-            '3': { pitch: 0.5, rate: 1.5 }, // TIEMPO
-            '5': { pitch: 0.1, rate: 0.5 }, // MUERTE
-            '7': { pitch: 1.0, rate: 1.0 }, // ESPEJO
-            '9': { pitch: 1.2, rate: 0.9 }, // MARTA
-            '10': { pitch: 0.7, rate: 1.1 }, // SISTEMA
-            '13': { pitch: 1.0, rate: 0.8 }  // FINAL
+            '0': { pitch: 0.8, rate: 0.9, bgType: 'static' }, 
+            '1': { pitch: 0.1, rate: 0.6, bgType: 'deep_drone' }, 
+            '2': { pitch: 1.6, rate: 1.2, bgType: 'high_pitch' }, 
+            '3': { pitch: 0.5, rate: 1.1, bgType: 'clock_tick' }, 
+            '5': { pitch: 0.05, rate: 0.5, bgType: 'deep_drone' }, 
+            '7': { pitch: 1.0, rate: 1.0, bgType: 'static' }, 
+            '9': { pitch: 1.1, rate: 0.95, bgType: 'clean' }, 
+            '10': { pitch: 0.6, rate: 1.2, bgType: 'data' }, 
+            '13': { pitch: 1.0, rate: 0.8, bgType: 'clean' }  
         };
 
+        // CONTENIDO ACTUALIZADO: DIRIGIDO AL USUARIO (SEGUNDA PERSONA)
         const content = {
             '0': { 
                 stamp: "REGISTRO ENTRADA", title: "LA ESTACIÓN", 
-                text: "Entro en la estación. Pero hoy, el ascensor de la derecha me espera abierto.", 
-                btn: "LEER INTRODUCCIÓN", voice: "Piso G. Bienvenido a la vía muerta.",
-                details: "<h3>EL ERROR TÉCNICO</h3><p>En los planos, este hueco no existe. Solo aparece cuando no quieres enfrentarte a algo.</p>"
+                text: "Entras en la estación. Pero hoy, el ascensor de la derecha te espera abierto.", 
+                btn: "LEER INTRODUCCIÓN", voice: "Piso G. Bienvenido... a tu propia vía muerta.",
+                details: "<h3>EL ERROR TÉCNICO</h3><p>En los planos, este hueco no existe. Solo aparece cuando tú no quieres enfrentarte a la realidad.</p>"
             },
             '1': { 
-                stamp: "EXPEDIENTE #892", title: "MARÍA: EL RECUERDO", 
+                stamp: "EXPEDIENTE #892", title: "EL RECUERDO", 
                 text: "Nunca superaste ese 'no'. Solo lo guardaste... hasta que pesó más que tú.", 
-                btn: "VER EXPEDIENTE", voice: "Piso 1. El recuerdo. María está muerta en tu memoria.",
+                btn: "VER EXPEDIENTE", voice: "Piso 1... El re-cuer-do. María... está muerta en tu memoria.",
                 details: "<h3>LA HERIDA ANTIGUA</h3><p><b>Muerte:</b> 'La muerte no es solo el fin. Es el momento en que algo dentro de ti deja de moverse'.</p>",
                 entity: 'entity-death'
             },
             '2': { 
                 stamp: "INTERCEPCIÓN SENSORIAL", title: "LA DUDA", 
                 text: "Soy esa cosquilla que te dice 'no te abras de nuevo, te destruirán otra vez'.", 
-                btn: "ESCUCHAR DUDA", voice: "¡Piso 2! ¡Escucha! ¡Te van a hacer daño! ¡No salgas!",
-                details: "<h3>VOZ DE LA DUDA</h3><p>'Soy la que te mantuvo lejos de Marta. Para protegerte. Porque si no hablas, no te pueden rechazar'.</p>",
+                btn: "ESCUCHAR DUDA", voice: "¡Piso 2! ¡Escucha! ¡Te van a hacer daño! ¡No salgas! ¡Saben que eres débil!",
+                details: "<h3>VOZ DE LA DUDA</h3><p>'Soy la que te mantuvo lejos de ella. Para protegerte. Porque si no hablas, no te pueden rechazar'.</p>",
                 entity: 'entity-doubt'
             },
             '3': { 
                 stamp: "DATOS DEGRADADOS", title: "EL TIEMPO", 
                 text: "Soy el que corre, el que se agota aunque no quieras. Tic, tac.", 
-                btn: "VER RELOJ", voice: "Piso 3. Tic tac. Se acaba el tiempo, Álex.",
-                details: "<h3>CRONOLOGÍA DEL MIEDO</h3><p>Dijiste 'mañana se lo digo'. Pero el mañana nunca llegó.</p>"
+                btn: "VER RELOJ", voice: "Piso 3. Tic... tac. Tic... tac. Se te acaba el tiempo... viajero. Tic... tac.",
+                details: "<h3>CRONOLOGÍA DEL MIEDO</h3><p>Dijiste 'mañana se lo digo'. Pero el mañana nunca llegó para ti.</p>"
             },
             '5': { 
                 stamp: "CARGA COGNITIVA", title: "LAS ENTIDADES", 
-                text: "No viajas solo. Mira bien el espejo. ¿Ves esa sombra?", 
-                btn: "VER BOCETOS", voice: "Piso 5. Te veo. Siempre estoy detrás de ti.",
-                details: "<h3>SOMBRA DE LA MUERTE</h3><p>Una figura alta y oscura que siempre te acompaña.</p>",
+                text: "No viajas solo. Mira bien el espejo. ¿Ves esa sombra detrás de ti?", 
+                btn: "VER BOCETOS", voice: "Piso... cin-co... Te veo... Siempre estoy... respirando... tu aire.",
+                details: "<h3>SOMBRA DE LA MUERTE</h3><p>Una figura alta y oscura que siempre te acompaña cuando te miras al espejo.</p>",
                 entity: 'entity-death'
             },
             '7': { 
                 stamp: "REFLEJO DISTORSIONADO", title: "EL ESPEJO", 
                 text: "Tu reflejo se mueve segundos antes que tú. Es más sincero de lo que te atreves a ser.", 
-                btn: "MIRAR REFLEJO", voice: "Piso 7. Mírate. Eres patético.",
-                details: "<h3>DIÁLOGO CON EL ESPEJO</h3><p>REFLEJO: 'Ensayas sonrisas ingeniosas... y luego cuando llega Marta, solo dices hola'.</p>"
+                btn: "MIRAR REFLEJO", voice: "Piso 7. Mírate. Eres... patético.",
+                details: "<h3>DIÁLOGO CON EL ESPEJO</h3><p>REFLEJO: 'Ensayas sonrisas ingeniosas... y luego cuando llega el momento, te callas'.</p>"
             },
             '9': { 
-                stamp: "LLAMADA ENTRANTE", title: "MARTA", 
-                text: "Marta responde. ¿Vas a hablar o vas a colgar?", 
-                btn: "ABRIR INTERCOM", voice: "¿Álex? ¿Estás ahí? Por favor, contesta.",
+                stamp: "LLAMADA ENTRANTE", title: "ELLA", 
+                text: "Alguien responde al otro lado. ¿Vas a hablar o vas a colgar?", 
+                btn: "ABRIR INTERCOM", voice: "¿Hay alguien ahí? ¿Eres tú?... Por favor... contesta...",
                 details: "<h3>MARTA</h3><p>Marta: 'Siempre te he visto fuerte... pero si estás temblando, puedo esperarte'.</p>",
                 entity: 'entity-marta'
             },
             '10': { 
                 stamp: "ARCHIVO DE MANTENIMIENTO", title: "DESARROLLO", 
                 text: "Detrás de los muros de la estación hay un equipo creando esta pesadilla.", 
-                btn: "VER CRÉDITOS", voice: "Accediendo a los archivos de desarrollo.",
-                details: "<h3>CRÉDITOS</h3><p>Creado por Álex y la IA.</p>"
+                btn: "VER CRÉDITOS", voice: "Accediendo... a los archivos... del Arquitecto.",
+                details: "<h3>CRÉDITOS</h3><p>Creado por la Entidad.</p>"
             },
             '13': { 
                 stamp: "REINICIO TOTAL", title: "LA SALIDA", 
-                text: "Las puertas se abren. Ella está ahí de verdad. Es hora de ser real.", 
-                btn: "SALIR", voice: "Piso 13. Última oportunidad. Vive.",
-                details: "<h3>SALIDA</h3><p>Marta está esperando.</p><button class='action-link' onclick='location.reload()' style='margin-top:20px'>SALIR DEL BUCLE</button>"
+                text: "Las puertas se abren. Es hora de ser real. De verdad.", 
+                btn: "SALIR", voice: "Piso 13. Última oportunidad. Sal de aquí... y vive.",
+                details: "<h3>SALIDA</h3><p>El mundo real está esperando.</p><button class='action-link' onclick='location.reload()' style='margin-top:20px'>SALIR DEL BUCLE</button>"
             }
         };
 
         const subliminalMessages = [
-            "¿LO HARÁS?", "O ESPERAR...", "NO EXISTE",
-            "MOMENTO IDEAL", "ES EL FIN", "¿YA NO LA VES?", 
-            "MAÑANA SEGURO", "MAÑANA MIENTE", "SE ACABA", 
-            "DÍSELO YA", "COBARDE", "NO HAY TIEMPO", "E R R O R"
+            "¿SIGUES AHÍ?", "NADIE TE OYE", "NO HAY SALIDA",
+            "MIRA ATRÁS", "ES EL FIN", "¿QUIÉN ERES?", 
+            "ESTÁS SOLO", "SE ACABA", 
+            "DÍSELO YA", "COBARDE", "TE VEO", "E R R O R",
+            "MAÑANA SEGURO??", "¿ESPERAS?", "HAZ QUE PASE", "AHORA"
         ];
 
         let audioCtx; let isMoving = false; let currentFloor = null;
-        let ambientGain; let glitchInterval;
+        let ambientGain; let glitchInterval; let speechEffectOsc = null;
         let hasCamera = false;
+        
+        // VARIABLES SISTEMA IDLE
+        let idleTimer = 0;
+        let idleInterval;
+        let isHaunted = false;
 
         async function initSite() {
             const AC = window.AudioContext || window.webkitAudioContext; audioCtx = new AC();
@@ -358,17 +356,83 @@
                 document.getElementById('static-bg').style.display = 'block';
                 document.getElementById('webcam').style.display = 'none';
                 
-                // IMPORTANTE: Si no hay cámara, hacemos que las entidades brillen o tengan alto contraste
                 document.querySelectorAll('.entity').forEach(el => {
-                    el.style.mixBlendMode = 'normal'; // Quitamos modos de fusión complejos
+                    el.style.mixBlendMode = 'normal'; 
                     el.style.filter = 'contrast(1.5) brightness(1.2) drop-shadow(0 0 10px rgba(255,0,0,0.3))';
                 });
                 hasCamera = false;
             }
             document.getElementById('intro-overlay').style.opacity = 0;
             setTimeout(() => document.getElementById('intro-overlay').remove(), 1000);
-            playAmbient(); travel(0);
+            playAmbient(); 
+            travel(0);
+            
+            // INICIAR SISTEMA DE INACTIVIDAD
+            startIdleSystem();
         }
+
+        // --- SISTEMA DE INACTIVIDAD (HAUNTING) ---
+        function startIdleSystem() {
+            if(idleInterval) clearInterval(idleInterval);
+            idleInterval = setInterval(() => {
+                idleTimer++;
+                // Si pasa 8 segundos sin actividad, empieza el show
+                if (idleTimer > 8 && !isMoving && !document.getElementById('modal-overlay').style.display.includes('flex')) {
+                    triggerHauntingEvent();
+                }
+            }, 1000);
+        }
+
+        function resetIdleTimer() {
+            idleTimer = 0;
+            if(isHaunted) stopHauntingEvent();
+        }
+
+        function triggerHauntingEvent() {
+            isHaunted = true;
+            const r = Math.random();
+            
+            // Evento 1: Mensaje subliminal en pantalla
+            const display = document.getElementById('floor-txt');
+            display.innerText = subliminalMessages[Math.floor(Math.random() * subliminalMessages.length)];
+            display.style.color = "#f00";
+            
+            // Evento 2: Botón embrujado
+            const btns = [13, 1, 5, 2];
+            const randomBtn = document.getElementById('btn-' + btns[Math.floor(Math.random() * btns.length)]);
+            randomBtn.classList.add('haunted');
+
+            // Evento 3: Ruido en interfono
+            const led = document.getElementById('voice-led');
+            led.classList.add('glitch-flash');
+            
+            // Sonido corto de estática
+            if(audioCtx) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(50, audioCtx.currentTime);
+                // Modulación aleatoria de frecuencia para sonar como interferencia
+                osc.frequency.linearRampToValueAtTime(Math.random() * 800, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        function stopHauntingEvent() {
+            isHaunted = false;
+            document.getElementById('floor-txt').innerText = currentFloor === 10 ? "INF" : (currentFloor === 0 ? "G" : currentFloor);
+            document.getElementById('floor-txt').style.color = "var(--bulb-on)";
+            
+            document.querySelectorAll('.phys-btn').forEach(b => b.classList.remove('haunted'));
+            document.getElementById('voice-led').classList.remove('glitch-flash');
+        }
+
 
         function getGlitchText() {
             if(Math.random() > 0.3) {
@@ -398,6 +462,8 @@
         function travel(floor) {
             if(isMoving || floor === currentFloor) return; 
             isMoving = true;
+            resetIdleTimer(); // Resetear idle al interactuar
+
             document.querySelectorAll('.phys-btn').forEach(b => b.classList.remove('active'));
             const targetBtn = document.getElementById(`btn-${floor}`);
             if(targetBtn) targetBtn.classList.add('active');
@@ -463,19 +529,66 @@
             if(type==='motor'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(30,now); osc.start(); return {stop:()=>{gain.gain.linearRampToValueAtTime(0,now+1);osc.stop(now+1);}}}
         }
 
+        // --- SISTEMA DE VOZ AVANZADO ---
         function speak(text, floor) { 
             window.speechSynthesis.cancel(); 
+            if(speechEffectOsc) { try{speechEffectOsc.stop();}catch(e){} speechEffectOsc = null; }
+
             const u = new SpeechSynthesisUtterance(text); 
             u.lang = 'es-ES'; 
-            const config = voiceConfig[floor] || { pitch: 0.8, rate: 0.9 };
+            
+            const config = voiceConfig[floor] || { pitch: 0.8, rate: 0.9, bgType: 'static' };
             u.pitch = config.pitch;
             u.rate = config.rate;
+
+            const voices = window.speechSynthesis.getVoices();
+            const bestVoice = voices.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Microsoft')));
+            if(bestVoice) u.voice = bestVoice;
+
             const led = document.getElementById('voice-led'); led.classList.add('active');
-            u.onend = () => led.classList.remove('active');
+
+            playVoiceBackgroundEffect(config.bgType);
+
+            u.onend = () => {
+                led.classList.remove('active');
+                if(speechEffectOsc) { try{speechEffectOsc.stop();}catch(e){} speechEffectOsc = null; }
+            };
             window.speechSynthesis.speak(u); 
         }
 
+        function playVoiceBackgroundEffect(type) {
+            if(type === 'clean') return; 
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+
+            if(type === 'deep_drone') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(40, now);
+                gain.gain.setValueAtTime(0.05, now);
+            } 
+            else if (type === 'high_pitch') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.linearRampToValueAtTime(1300, now + 2);
+                gain.gain.setValueAtTime(0.02, now);
+            }
+            else if (type === 'static' || type === 'data') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, now);
+                gain.gain.setValueAtTime(0.01, now);
+            }
+
+            osc.start();
+            speechEffectOsc = osc;
+        }
+
         function openDetails() {
+            resetIdleTimer();
             const modal = document.getElementById('modal-overlay');
             const body = document.getElementById('modal-body');
             body.innerHTML = content[currentFloor].details;
@@ -483,7 +596,7 @@
             playSfx('click', 0.1);
         }
 
-        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; resetIdleTimer(); }
     </script>
 </body>
 </html>
