@@ -89,22 +89,79 @@
         .phys-btn:hover { border-color: #555; color: #999; }
         .phys-btn.active { background: #8b0000; color: #fff; box-shadow: 0 0 15px var(--bulb-on); border-color: #ff4500; }
 
-        /* --- ESPEJO Y PUERTAS --- */
+        /* --- ESPEJO REALISTA Y ENTIDADES --- */
         .mirror-frame {
             position: absolute; top: 5%; left: 22%; width: 56%; height: 90%;
             transform: translateZ(-200px); background: #000; border: 20px solid #1a1a1a; overflow: hidden;
-            z-index: 1;
+            z-index: 1; box-shadow: inset 0 0 80px #000;
         }
-        video#webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); filter: grayscale(100%) brightness(0.25) contrast(1.2); }
         
+        /* 1. ESTÁTICA GENERADA POR CSS (SIN IMAGEN EXTERNA PARA EVITAR ERRORES) */
+        .no-signal-bg {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background-color: #111;
+            /* Patrón de ruido generado con gradientes */
+            background-image: repeating-linear-gradient(transparent 0px, transparent 1px, rgba(255,255,255,0.08) 1px, rgba(255,255,255,0.08) 2px);
+            background-size: 100% 4px;
+            animation: staticNoise 0.2s infinite linear;
+            z-index: 0;
+            display: none; /* Se activa con JS */
+        }
+
+        /* 2. Video Webcam */
+        video#webcam { 
+            width: 100%; height: 100%; object-fit: cover; 
+            transform: scaleX(-1); 
+            filter: grayscale(100%) brightness(0.4) contrast(1.3) sepia(0.3); 
+            position: relative; z-index: 1; 
+        }
+
+        /* 3. Capa de Suciedad (Grunge) */
+        .mirror-grime {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/black-felt.png'); 
+            opacity: 0.5; z-index: 5; pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        /* 4. Capa de Reflejo de Luz */
+        .mirror-reflection {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.03) 40%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 60%, transparent 65%);
+            z-index: 6; pointer-events: none;
+        }
+
+        /* 5. Capa de Entidades */
+        #shadow-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2; overflow: hidden;
+            display: flex; justify-content: center; align-items: flex-end;
+        }
+        
+        .entity {
+            position: absolute; width: 100%; height: 100%; top:0; left:0;
+            background-size: contain; background-position: center bottom; background-repeat: no-repeat;
+            opacity: 0; transition: opacity 2s ease-in-out;
+            mix-blend-mode: normal; 
+        }
+
+        /* Imágenes de Entidades (URLs actualizadas/verificadas) */
+        #entity-death { background-image: url('https://cdn.pixabay.com/photo/2013/07/12/12/55/grim-reaper-146552_1280.png'); }
+        #entity-doubt { background-image: url('https://cdn.pixabay.com/photo/2016/11/14/03/38/achieve-1822503_1280.png'); filter: blur(3px) brightness(0.5); }
+        #entity-marta { background-image: url('https://cdn.pixabay.com/photo/2016/03/31/19/58/avatar-1295429_1280.png'); }
+
+        .entity.active { opacity: 0.9; transform: scale(1.05); transition: transform 6s ease-out, opacity 0.5s; }
+
+
+        /* --- PUERTAS Y DISPLAY --- */
         .door { position: absolute; top: 0; width: 50.5%; height: 100%; z-index: 100; transition: transform 3.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .door-l { left: 0; border-right: 5px solid #000; }
         .door-r { right: 0; border-left: 5px solid #000; }
         body.open .door-l { transform: translateX(-95%); }
         body.open .door-r { transform: translateX(95%); }
 
-        .display-analog { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: #000; padding: 5px 30px; border: 4px solid #333; z-index: 200; }
-        #floor-txt { font-family: 'Anton'; font-size: 2.2rem; color: var(--bulb-on); text-shadow: 0 0 10px var(--bulb-on); }
+        .display-analog { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: #000; padding: 5px 30px; border: 4px solid #333; z-index: 200; width: 220px; text-align: center; overflow: hidden;}
+        #floor-txt { font-family: 'Anton'; font-size: 2.2rem; color: var(--bulb-on); text-shadow: 0 0 10px var(--bulb-on); white-space: nowrap; transition: font-size 0.2s; }
 
         /* --- TARJETA DOSSIER --- */
         .content-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 300; pointer-events: none; display: flex; justify-content: center; align-items: center; }
@@ -132,11 +189,11 @@
         .close-modal { position: absolute; top: 10px; right: 20px; font-size: 2.5rem; cursor: pointer; color: #000; }
         .sketch-img { width: 100%; margin: 15px 0; border: 1px solid #000; filter: sepia(0.5) contrast(1.1); }
         
-        /* Estilo para links sociales en el modal */
         .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .social-box { border: 1px dashed #333; padding: 10px; text-align: center; background: rgba(0,0,0,0.05); }
 
         @keyframes badFluorescent { 0%, 100% { opacity: 1; } 86% { opacity: 0.3; } 93% { opacity: 0.1; } }
+        @keyframes staticNoise { 0% { background-position: 0 0; } 100% { background-position: 0 60px; } }
     </style>
 </head>
 <body class="closed">
@@ -171,7 +228,17 @@
         </div>
 
         <div class="mirror-frame">
+            <div class="mirror-grime"></div>
+            <div class="mirror-reflection"></div>
+            <div class="no-signal-bg" id="static-bg"></div>
+            
             <video id="webcam" autoplay playsinline muted></video>
+            
+            <div id="shadow-layer">
+                <div class="entity" id="entity-death"></div>
+                <div class="entity" id="entity-doubt"></div>
+                <div class="entity" id="entity-marta"></div>
+            </div>
         </div>
 
         <div class="display-analog"><div id="floor-txt">--</div></div>
@@ -196,75 +263,136 @@
     </div>
 
     <script>
+        const voiceConfig = {
+            '0': { pitch: 0.8, rate: 0.9 }, // Normal
+            '1': { pitch: 0.1, rate: 0.6 }, // MUERTE
+            '2': { pitch: 1.8, rate: 1.3 }, // DUDA
+            '3': { pitch: 0.5, rate: 1.5 }, // TIEMPO
+            '5': { pitch: 0.1, rate: 0.5 }, // MUERTE
+            '7': { pitch: 1.0, rate: 1.0 }, // ESPEJO
+            '9': { pitch: 1.2, rate: 0.9 }, // MARTA
+            '10': { pitch: 0.7, rate: 1.1 }, // SISTEMA
+            '13': { pitch: 1.0, rate: 0.8 }  // FINAL
+        };
+
         const content = {
             '0': { 
                 stamp: "REGISTRO ENTRADA", title: "LA ESTACIÓN", 
-                text: "Entro en la estación, paso el torno como siempre. Pero hoy, el ascensor de la derecha me espera abierto.", 
+                text: "Entro en la estación. Pero hoy, el ascensor de la derecha me espera abierto.", 
                 btn: "LEER INTRODUCCIÓN", voice: "Piso G. Bienvenido a la vía muerta.",
-                details: "<h3>EL ERROR TÉCNICO</h3><p>En los planos, este hueco no existe. Es poco más que un fantasma. Solo aparece cuando no quieres enfrentarte a algo.</p><p><i>Hoy, después de años huyendo de lo que pasó con María, el ascensor está ahí. Esperándome.</i></p>"
+                details: "<h3>EL ERROR TÉCNICO</h3><p>En los planos, este hueco no existe. Solo aparece cuando no quieres enfrentarte a algo.</p>"
             },
             '1': { 
                 stamp: "EXPEDIENTE #892", title: "MARÍA: EL RECUERDO", 
                 text: "Nunca superaste ese 'no'. Solo lo guardaste... hasta que pesó más que tú.", 
-                btn: "VER EXPEDIENTE", voice: "Piso 1. El recuerdo. María no está aquí.",
-                details: "<h3>LA HERIDA ANTIGUA</h3><p>La primera vez que dijiste 'te quiero', ella dijo 'lo siento'. Ese día dejaste de intentar. Dejaste de vivir.</p><p><b>Muerte:</b> 'La muerte no es solo el fin. Es el momento en que algo dentro de ti deja de moverse'.</p>"
+                btn: "VER EXPEDIENTE", voice: "Piso 1. El recuerdo. María está muerta en tu memoria.",
+                details: "<h3>LA HERIDA ANTIGUA</h3><p><b>Muerte:</b> 'La muerte no es solo el fin. Es el momento en que algo dentro de ti deja de moverse'.</p>",
+                entity: 'entity-death'
             },
             '2': { 
                 stamp: "INTERCEPCIÓN SENSORIAL", title: "LA DUDA", 
                 text: "Soy esa cosquilla que te dice 'no te abras de nuevo, te destruirán otra vez'.", 
-                btn: "ESCUCHAR DUDA", voice: "Piso 2. Escucha a la Duda. Ella te protege, ¿verdad?",
-                details: "<h3>VOZ DE LA DUDA</h3><p>'Soy la que te mantuvo lejos de Marta. Para protegerte. Porque si no hablas, no te pueden rechazar'.</p>"
+                btn: "ESCUCHAR DUDA", voice: "¡Piso 2! ¡Escucha! ¡Te van a hacer daño! ¡No salgas!",
+                details: "<h3>VOZ DE LA DUDA</h3><p>'Soy la que te mantuvo lejos de Marta. Para protegerte. Porque si no hablas, no te pueden rechazar'.</p>",
+                entity: 'entity-doubt'
             },
             '3': { 
                 stamp: "DATOS DEGRADADOS", title: "EL TIEMPO", 
-                text: "Soy el que corre, el que se agota aunque no quieras. El que se llevó a María mientras esperabas.", 
-                btn: "VER RELOJ", voice: "Piso 3. El tiempo se agota, Álex.",
-                details: "<h3>CRONOLOGÍA DEL MIEDO</h3><p>Dijiste 'mañana se lo digo'. Pero el mañana nunca llegó para ella. Ahora estás haciendo lo mismo con Marta.</p>"
+                text: "Soy el que corre, el que se agota aunque no quieras. Tic, tac.", 
+                btn: "VER RELOJ", voice: "Piso 3. Tic tac. Se acaba el tiempo, Álex.",
+                details: "<h3>CRONOLOGÍA DEL MIEDO</h3><p>Dijiste 'mañana se lo digo'. Pero el mañana nunca llegó.</p>"
             },
             '5': { 
                 stamp: "CARGA COGNITIVA", title: "LAS ENTIDADES", 
-                text: "No viajas solo. La Muerte, la Duda y el Tiempo son los únicos pasajeros constantes.", 
-                btn: "VER BOCETOS", voice: "Piso 5. El espejo no miente.",
-                details: "<h3>BOCETOS DE SOMBRAS</h3><img src='https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=1000&auto=format&fit=crop' class='sketch-img'><p><b>Muerte:</b> 'La muerte es la que te obliga a vivir. Y tú llevas demasiado tiempo sobreviviendo'.</p>"
+                text: "No viajas solo. Mira bien el espejo. ¿Ves esa sombra?", 
+                btn: "VER BOCETOS", voice: "Piso 5. Te veo. Siempre estoy detrás de ti.",
+                details: "<h3>SOMBRA DE LA MUERTE</h3><p>Una figura alta y oscura que siempre te acompaña.</p>",
+                entity: 'entity-death'
             },
             '7': { 
                 stamp: "REFLEJO DISTORSIONADO", title: "EL ESPEJO", 
                 text: "Tu reflejo se mueve segundos antes que tú. Es más sincero de lo que te atreves a ser.", 
-                btn: "MIRAR REFLEJO", voice: "Piso 7. Mírate. Eres un guion sin estrenar.",
+                btn: "MIRAR REFLEJO", voice: "Piso 7. Mírate. Eres patético.",
                 details: "<h3>DIÁLOGO CON EL ESPEJO</h3><p>REFLEJO: 'Ensayas sonrisas ingeniosas... y luego cuando llega Marta, solo dices hola'.</p>"
             },
             '9': { 
-                stamp: "LLAMADA ENTRANTE", title: "MARTA: LA LLAMADA", 
-                text: "El interfono marca un número inexistente. Marta responde. ¿Vas a hablar o vas a colgar?", 
-                btn: "ABRIR INTERCOM", voice: "Piso 9. Ella está al otro lado. Di algo.",
-                details: "<h3>INTERCEPCIÓN TELEFÓNICA</h3><p>Marta: '¿Estás ahí? Siempre te he visto fuerte... pero si estás temblando, puedo esperarte. Solo no me cierres la puerta'.</p>"
+                stamp: "LLAMADA ENTRANTE", title: "MARTA", 
+                text: "Marta responde. ¿Vas a hablar o vas a colgar?", 
+                btn: "ABRIR INTERCOM", voice: "¿Álex? ¿Estás ahí? Por favor, contesta.",
+                details: "<h3>MARTA</h3><p>Marta: 'Siempre te he visto fuerte... pero si estás temblando, puedo esperarte'.</p>",
+                entity: 'entity-marta'
             },
             '10': { 
                 stamp: "ARCHIVO DE MANTENIMIENTO", title: "DESARROLLO", 
-                text: "Detrás de los muros de la estación central hay un equipo de humanos creando esta pesadilla.", 
-                btn: "VER CRÉDITOS", voice: "Accediendo a los archivos de desarrollo del proyecto.",
-                details: "<h3>ESTACIÓN CENTRAL DE CONTROL</h3><p><b>Ascensor 13</b> es un proyecto indie nacido de la fascinación por los espacios liminales y el horror psicológico.</p><p><b>Equipo:</b> Desarrollado íntegramente por apasionados del género (Álex y equipo técnico).</p><div class='social-grid'><div class='social-box'><b>INSTAGRAM</b><br>@Ascensor13_Dev</div><div class='social-box'><b>TWITTER/X</b><br>@Estacion13_Horror</div><div class='social-box'><b>TIKTOK</b><br>VíaMuerta_Studio</div><div class='social-box'><b>WEB</b><br>www.ascensor13.com</div></div><p style='margin-top:20px; font-size: 0.8rem;'><i>Este juego utiliza tu propia imagen para reflejar tus miedos. Gracias por ser parte del experimento.</i></p>"
+                text: "Detrás de los muros de la estación hay un equipo creando esta pesadilla.", 
+                btn: "VER CRÉDITOS", voice: "Accediendo a los archivos de desarrollo.",
+                details: "<h3>CRÉDITOS</h3><p>Creado por Álex y la IA.</p>"
             },
             '13': { 
                 stamp: "REINICIO TOTAL", title: "LA SALIDA", 
-                text: "Sesenta segundos han pasado. Las puertas se abren. Ella está ahí de verdad. Es hora de ser real.", 
-                btn: "SALIR", voice: "Piso 13. Última parada. Elige vivir ahora.",
-                details: "<h3>RUIDO BLANCO</h3><p>El rojo desaparece. Vuelve la luz blanca. Marta está ahí de verdad.</p><p><b>Conclusión:</b> Imaginamos mucho, hacemos poco. Pero hoy... hoy puedes decir 'Hola'.</p><button class='action-link' onclick='location.reload()' style='margin-top:20px'>SALIR DEL BUCLE</button>"
+                text: "Las puertas se abren. Ella está ahí de verdad. Es hora de ser real.", 
+                btn: "SALIR", voice: "Piso 13. Última oportunidad. Vive.",
+                details: "<h3>SALIDA</h3><p>Marta está esperando.</p><button class='action-link' onclick='location.reload()' style='margin-top:20px'>SALIR DEL BUCLE</button>"
             }
         };
 
+        const subliminalMessages = [
+            "¿LO HARÁS?", "O ESPERAR...", "NO EXISTE",
+            "MOMENTO IDEAL", "ES EL FIN", "¿YA NO LA VES?", 
+            "MAÑANA SEGURO", "MAÑANA MIENTE", "SE ACABA", 
+            "DÍSELO YA", "COBARDE", "NO HAY TIEMPO", "E R R O R"
+        ];
+
         let audioCtx; let isMoving = false; let currentFloor = null;
-        let ambientGain;
+        let ambientGain; let glitchInterval;
+        let hasCamera = false;
 
         async function initSite() {
             const AC = window.AudioContext || window.webkitAudioContext; audioCtx = new AC();
             try { 
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true }); 
                 document.getElementById('webcam').srcObject = stream; 
-            } catch(e) { console.log("Cámara no disponible"); }
+                hasCamera = true;
+            } catch(e) { 
+                console.log("Cámara no disponible, activando modo sin señal.");
+                document.getElementById('static-bg').style.display = 'block';
+                document.getElementById('webcam').style.display = 'none';
+                
+                // IMPORTANTE: Si no hay cámara, hacemos que las entidades brillen o tengan alto contraste
+                document.querySelectorAll('.entity').forEach(el => {
+                    el.style.mixBlendMode = 'normal'; // Quitamos modos de fusión complejos
+                    el.style.filter = 'contrast(1.5) brightness(1.2) drop-shadow(0 0 10px rgba(255,0,0,0.3))';
+                });
+                hasCamera = false;
+            }
             document.getElementById('intro-overlay').style.opacity = 0;
             setTimeout(() => document.getElementById('intro-overlay').remove(), 1000);
             playAmbient(); travel(0);
+        }
+
+        function getGlitchText() {
+            if(Math.random() > 0.3) {
+                const msg = subliminalMessages[Math.floor(Math.random() * subliminalMessages.length)];
+                return msg.split('').map(c => Math.random() > 0.92 ? '#' : (Math.random() > 0.92 ? 'Ø' : c)).join('');
+            } else { return Math.random() > 0.5 ? "MOV..." : "---"; }
+        }
+
+        function triggerShadowEffect(floor) {
+            const floorData = content[floor];
+            if(floorData && floorData.entity) {
+                const element = document.getElementById(floorData.entity);
+                if(element) {
+                    element.classList.add('active');
+                    setTimeout(() => {
+                        element.classList.remove('active');
+                    }, 6000);
+                }
+            } else {
+                if(Math.random() > 0.7) {
+                    document.getElementById('entity-doubt').classList.add('active');
+                    setTimeout(() => document.getElementById('entity-doubt').classList.remove('active'), 4000);
+                }
+            }
         }
 
         function travel(floor) {
@@ -277,16 +405,33 @@
             playSfx('click', 0.1);
             document.body.className = "closed";
 
+            document.querySelectorAll('.entity').forEach(e => e.classList.remove('active'));
+
+            const display = document.getElementById('floor-txt');
+            display.style.color = "#ff3333"; display.style.fontSize = "1.2rem";
+
+            glitchInterval = setInterval(() => {
+                display.innerText = getGlitchText();
+                display.style.opacity = Math.random() > 0.6 ? 1 : 0.4;
+            }, 180);
+
             setTimeout(() => {
                 const motor = playSfx('motor', 0.02);
-                document.getElementById('floor-txt').innerText = "MOV";
                 document.querySelector('.fluorescent-tube').style.animationDuration = "0.3s";
+                
                 setTimeout(() => {
+                    clearInterval(glitchInterval);
                     motor.stop(); playSfx('ding', 0.05);
+                    
+                    display.style.color = "var(--bulb-on)"; display.style.fontSize = "2.2rem"; display.style.opacity = 1;
                     currentFloor = floor;
-                    document.getElementById('floor-txt').innerText = floor === 10 ? "INF" : (floor === 0 ? "G" : floor);
+                    display.innerText = floor === 10 ? "INF" : (floor === 0 ? "G" : floor);
+                    
                     document.body.className = "open";
+                    triggerShadowEffect(floor);
+                    
                     document.querySelector('.fluorescent-tube').style.animationDuration = "5s";
+                    
                     setTimeout(() => {
                         const data = content[floor];
                         document.getElementById('c-stamp').innerText = data.stamp;
@@ -294,7 +439,9 @@
                         document.getElementById('c-text').innerText = data.text;
                         document.getElementById('c-btn').innerText = data.btn;
                         document.getElementById('main-card').classList.add('visible');
-                        speak(data.voice);
+                        
+                        speak(data.voice, floor);
+                        
                         isMoving = false;
                     }, 1200);
                 }, 3000);
@@ -316,9 +463,13 @@
             if(type==='motor'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(30,now); osc.start(); return {stop:()=>{gain.gain.linearRampToValueAtTime(0,now+1);osc.stop(now+1);}}}
         }
 
-        function speak(text) { 
+        function speak(text, floor) { 
             window.speechSynthesis.cancel(); 
-            const u=new SpeechSynthesisUtterance(text); u.lang='es-ES'; u.rate=0.8; u.pitch=0.2;
+            const u = new SpeechSynthesisUtterance(text); 
+            u.lang = 'es-ES'; 
+            const config = voiceConfig[floor] || { pitch: 0.8, rate: 0.9 };
+            u.pitch = config.pitch;
+            u.rate = config.rate;
             const led = document.getElementById('voice-led'); led.classList.add('active');
             u.onend = () => led.classList.remove('active');
             window.speechSynthesis.speak(u); 
